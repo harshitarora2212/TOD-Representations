@@ -524,7 +524,7 @@ I support this Joint Representation.`;
   // more like a structured letter without needing a hardcoded header list.
   function renderPreview(text){
     const html = escapeHtml(text);
-    return html.replace(/^(\d+\.\s[^\n]{1,90})(?::|$)/gm, "<strong>$1</strong>");
+    return html.replace(/^(\d+\.\s[^\n]{1,90}[?:])/gm, "<strong>$1</strong>");
   }
 
   document.getElementById("letterBox").innerHTML = renderPreview(LETTER_TEMPLATE);
