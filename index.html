@@ -539,10 +539,38 @@ I support this Joint Representation.`;
   // this specific scheme, which is why the mailto path below stays as a
   // backup for people without Gmail.
   const gmailBody = LETTER_TEMPLATE.replace(/\n/g, "\r\n");
-  const gmailAppUrl = "googlegmail:///co?to=" + encodeURIComponent(TO_RECIPIENTS.join(","))
-    + "&cc=" + encodeURIComponent(CC_RECIPIENTS.join(","))
-    + "&subject=" + encodeURIComponent(SUBJECT)
-    + "&body=" + encodeURIComponent(gmailBody);
+
+  // googlegmail:///co is a custom URL scheme registered ONLY by the Gmail
+  // iOS app. Android's Gmail app never registers this scheme, so on Android
+  // the link matches no app and silently does nothing — which is exactly
+  // the symptom reported (works on iPhone, no-ops on Android).
+  //
+  // Android has no equivalent "Gmail's own scheme" to jump to. Instead, the
+  // way to force a mailto-style action to open specifically in Gmail (and
+  // not the OS app-picker) is an Android "intent:" URI: it's a mailto
+  // request, but with `package=com.google.android.gm` pinned so Android
+  // resolves it straight to Gmail instead of showing a chooser or falling
+  // through to whatever the default mail app is.
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  let gmailAppUrl;
+  if (isAndroid) {
+    const mailtoPart = TO_RECIPIENTS.join(",")
+      + "?cc=" + encodeURIComponent(CC_RECIPIENTS.join(","))
+      + "&subject=" + encodeURIComponent(SUBJECT)
+      + "&body=" + encodeURIComponent(gmailBody);
+    gmailAppUrl = "intent://" + mailtoPart
+      + "#Intent;scheme=mailto;package=com.google.android.gm;"
+      + "S.browser_fallback_url=" + encodeURIComponent(
+          "https://play.google.com/store/apps/details?id=com.google.android.gm"
+        )
+      + ";end";
+  } else {
+    gmailAppUrl = "googlegmail:///co?to=" + encodeURIComponent(TO_RECIPIENTS.join(","))
+      + "&cc=" + encodeURIComponent(CC_RECIPIENTS.join(","))
+      + "&subject=" + encodeURIComponent(SUBJECT)
+      + "&body=" + encodeURIComponent(gmailBody);
+  }
 
   document.getElementById("gmailBtn").setAttribute("href", gmailAppUrl);
 
